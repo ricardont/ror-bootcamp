@@ -5,9 +5,9 @@ class PizzaBurger
   end
 
   def order(name='Jon Doe', phone='666-666-66')
-  	@name = name;
-  	@phone = phone;
-     "Hi #{@name}, your phone is #{@phone}}"
+  	@name = name
+  	@phone = phone
+     "Hi #{@name}, your phone is #{@phone}"
 	end
 	def menu
 		print """ 
