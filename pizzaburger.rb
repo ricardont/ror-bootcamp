@@ -1,30 +1,37 @@
+require 'yaml'
+
 class Order 
-	attr_accessor :name, :phone
-	def initialize(name='Jhon Doe', phone )
-		@name = name
-  	@phone = phone
+	def create(name='Jhon Doe', phone )
+  end
+  @@yaml_file='./db/orders.yml'
+  def write(data={})
+    File.open(@@yaml_file, "w") {|f| f.write(data.to_yaml) }
+  end
+  def list()
+    yml = YAML.load_file @@yaml_file
+    yml.map{  | item |
+       item["string"]
+    }
   end
 end
 class Pizza <  Order
-	attr_accessor :name, :phone, :toppings, :quantity, :string
-	def initialize(name, phone, toppings='pepperoni', quantity)
+	def create(name, phone, toppings='pepperoni', quantity)
 		 super(name, phone)
-  	 @toppings=toppings
-  	 @quantity=quantity
-  	 plural = @quantity.to_i > 1 ? 's' : '' 
-  	 @string = "#{@quantity} #{self.class.name}#{plural} with #{@toppings}"  
+  	 plural = quantity.to_i > 1 ? 's' : '' 
+  	 string = "#{quantity} #{self.class.name}#{plural} with #{toppings}"  
+     data = {"name" => name, "phone" => phone, "toppings" => toppings, "quantity"=> quantity, "string" => string, "type" => self.class.name }     
+     write(data)
 	end
 end
 
 
 class Burger < Order
-	attr_accessor :name, :phone, :type, :fries, :string
-	def initialize(name, phone, type, fries=false)
+	def create(name, phone, term, fries=false)
 		 super(name, phone)
-  	 @type=type
-  	 @fries=fries
-  	 with_fries = @fries ? 'with' : 'without'
-  	 @string = "#{self.class.name} #{with_fries} fries (#{@type})"
+  	 with_fries = fries ? 'with' : 'without'
+  	 string = "#{self.class.name} #{with_fries} fries (#{term})"
+     data = {"name" => name, "phone" => phone, "term" => term, "fries" => fries, "string" => string, "type" => self.class.name }
+     write(data)
 	end	
 end
 
@@ -147,4 +154,3 @@ class PizzaBurger
 end
 #puts Pizza.new('pepperoni and mushrooms', 5)
 
-PizzaBurger.new().menu
