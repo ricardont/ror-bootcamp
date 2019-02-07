@@ -1,7 +1,28 @@
 ---
-name: Bob
-phone: 7-52-45-87
-term: raredddd
-fries: false
-string: Burger without fries (raredddd)
-type: Burger
+:name: Bob
+:phone: 7-52-45-87
+:term: medium-rare
+:fries: false
+:string: Burger without fries (medium-rare)
+:type: Burger
+---
+:name: Carlos
+:phone: 6-66-66-66
+:toppings: pepperoni and cheese
+:quantity: 3
+:string: 3 Pizzas with pepperoni and cheese
+:type: Pizza
+---
+:name: Bob
+:phone: 7-52-45-87
+:term: medium-rare
+:fries: false
+:string: Burger without fries (medium-rare)
+:type: Burger
+---
+:name: Carlos
+:phone: 6-66-66-66
+:toppings: pepperoni and cheese
+:quantity: 3
+:string: 3 Pizzas with pepperoni and cheese
+:type: Pizza
