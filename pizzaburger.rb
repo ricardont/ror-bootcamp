@@ -6,13 +6,13 @@ class Order
   @@yaml_file='./db/orders.yml'
   def write(data={})
     
-    File.open(@@yaml_file, "a+") {|f| f.write data.to_yaml}  
+    File.open(@@yaml_file, "w+") {|f| f.write data.to_yaml}  
   end
   def list()
-    yml = YAML.load(File.open(@@yaml_file))
- 
-       puts yml[2]
-
+    yml = YAML.load_file(@@yaml_file)
+    yml.map { | row |
+      return row[:string] 
+    }
   end
 end
 class Pizza <  Order
@@ -20,7 +20,9 @@ class Pizza <  Order
 		 super(name, phone)
   	 plural = quantity.to_i > 1 ? 's' : '' 
   	 string = "#{quantity} #{self.class.name}#{plural} with #{toppings}"  
-     data = {name: name, phone: phone, toppings: toppings, quantity:  quantity, string: string, type: self.class.name }     
+     row = {name: name, phone: phone, toppings: toppings, quantity:  quantity, string: string, type: self.class.name } 
+     data = File.read(@@yaml_file).empty? ? [] : YAML.load(File.read(@@yaml_file)) 
+     data.push(row)
      write(data)
 	end
 end
@@ -31,7 +33,9 @@ class Burger < Order
 		 super(name, phone)
   	 with_fries = fries ? 'with' : 'without'
   	 string = "#{self.class.name} #{with_fries} fries (#{term})"
-     data = {name: name, phone: phone, term: term, fries: fries, string: string, type: self.class.name }
+     row = {name: name, phone: phone, term: term, fries: fries, string: string, type: self.class.name }
+     data = File.read(@@yaml_file).empty? ? [] : YAML.load(File.read(@@yaml_file)) 
+     data.push(row)
      write(data)
 	end	
 end
