@@ -1,45 +1,70 @@
 require 'yaml'
 
+module FileManager
+    def write(file, data={})
+      unless  file == nil
+        File.open(file, "w+") {|f| f.write data.to_yaml}  
+      end
+    end
+end
 class Order 
-	def create(name='Jhon Doe', phone )
+  include FileManager
+	def create(phone )
   end
   @@yaml_file='./db/orders.yml'
-  def write(data={})
-    
-    File.open(@@yaml_file, "w+") {|f| f.write data.to_yaml}  
-  end
   def list()
-    yml = YAML.load_file(@@yaml_file)
-    yml.map { | row |
-      return row[:string] 
-    }
+    return YAML.load_file(@@yaml_file)
   end
 end
 class Pizza <  Order
-	def create(name, phone, toppings='pepperoni', quantity)
-		 super(name, phone)
+	def create(phone, toppings='pepperoni', quantity)
+		 super(phone)
   	 plural = quantity.to_i > 1 ? 's' : '' 
   	 string = "#{quantity} #{self.class.name}#{plural} with #{toppings}"  
-     row = {name: name, phone: phone, toppings: toppings, quantity:  quantity, string: string, type: self.class.name } 
+     row = {phone: phone, toppings: toppings, quantity:  quantity, string: string, type: self.class.name } 
      data = File.read(@@yaml_file).empty? ? [] : YAML.load(File.read(@@yaml_file)) 
      data.push(row)
-     write(data)
+     write(@@yaml_file, data)
 	end
 end
 
 
 class Burger < Order
-	def create(name, phone, term, fries=false)
-		 super(name, phone)
+	def create( phone, term, fries=false)
+		 super(phone)
   	 with_fries = fries ? 'with' : 'without'
   	 string = "#{self.class.name} #{with_fries} fries (#{term})"
-     row = {name: name, phone: phone, term: term, fries: fries, string: string, type: self.class.name }
+     row = {phone: phone, term: term, fries: fries, string: string, type: self.class.name }
      data = File.read(@@yaml_file).empty? ? [] : YAML.load(File.read(@@yaml_file)) 
      data.push(row)
-     write(data)
+     write(@@yaml_file, data)
 	end	
 end
-
+class Client 
+  include FileManager
+  @@yaml_file='./db/clients.yml'
+  def create(name='Jhon Doe', phone, address)
+    unless phone==nil or phone==0
+      string = "#{name}, Phone: #{phone}, Address: #{address}"
+      row = {name: name, phone: phone, address: address, string: string}
+      data = File.read(@@yaml_file).empty? ? [] : YAML.load(File.read(@@yaml_file)) 
+      data.push(row)
+      write(@@yaml_file, data)
+    end
+  end
+  def list(phone=nil)
+    yml = YAML.load_file(@@yaml_file)
+    if phone == nil
+      return yml
+    else
+      yml.map.with_index { |row, index|
+        if row[:phone] == phone 
+          return row
+        end
+      }
+    end
+  end
+end
 class PizzaBurger
 	attr_accessor :orders
 	def initialize(orders=[])
@@ -47,6 +72,7 @@ class PizzaBurger
   end
 
   def order( item )
+    
   	if not  item ==  nil 
   		@orders.push(item)
     else
@@ -76,6 +102,7 @@ class PizzaBurger
       	2. Order a burger
       	3. List all orders
         4. Cancel an order
+        5. List Clients
 		  	"""
 		    self.menu(gets.chomp.to_i)
 		  	#"main menu"
@@ -86,24 +113,41 @@ class PizzaBurger
 	def menuOrderPizza
 		system "clear"
 		menuHeader('pizza')
-		print "Name:"
- 		name=gets.chomp
- 		print "Phone:"
-    phone=gets.chomp     
 		print "Which toppings:"
 		toppings=gets.chomp
 		print "How many Pizzas:"
 		quantity=gets.chomp
-		self.order(Pizza.new(name, phone, toppings, quantity))
+		self.order(pizza.create(phone, toppings, quantity))
 		self.menu(3)
+  end
+  def menuClientSearch
+		print "Phone?:"
+    result =  client.list(gets.chomp)
+    unless result  == nil
+      print "Welcome back {#result[:name]}"
+    else
+      menuClientNew
+    end
+  end
+  def menuClientNew
+    print "Phone:"
+    phone =gets.chomp
+    print "Name:"
+    name =gets.chomp
+    print "Address:"
+    address =gets.chomp
+    client.create(name, phone, address)
+    system "clear"
+    print "Welcome {#name}"
+  end
+  def menuClientList
+		system "clear"
+    
   end
   def menuOrderBurger
 		system "clear"
 		menuHeader('burger')
-		 		 print "Name:"
- 		 name=gets.chomp
- 		 print "Phone:"
-     phone=gets.chomp     
+
 		print "How would you like your burger:"
 		type=gets.chomp
 		print "Would you like fries (y/n)"
@@ -140,6 +184,11 @@ class PizzaBurger
 
   def menuHeader(type='main')
   	puts '                                      0 : back or exit'
+  	if type == ''
+  	  puts 'Welcome'
+  	else 
+  	  menuClientSearch
+  	end
   	case type
   	when 'pizza'
     	puts "	Ordering a pizza! "

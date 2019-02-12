@@ -3,17 +3,30 @@ require 'stringio'
 RSpec.describe PizzaBurger do 
   pizza=Pizza.new
   burger=Burger.new
+  client=Client.new
   orders=Order.new
   after do
    File.truncate('./db/orders.yml', 0)
+   File.truncate('./db/clients.yml', 0)
   end
   it 'saves a burger order' do
-  	burger.create('Bob', '7-52-45-87', 'medium-rare', false) 
-  	expect(orders.list).to eq('Burger without fries (medium-rare)')
+  	burger.create(1111111111, 'medium-rare', false) 
+  	expect(orders.list[:string]).to eq('Burger without fries (medium-rare)')
   end
   it 'saves a pizza order' do
-  	pizza.create('Carlos', '6-66-66-66', 'pepperoni and cheese', 3) 
-  	expect(orders.list).to eq('3 Pizzas with pepperoni and cheese')
+  	pizza.create(66666666666, 'pepperoni and cheese', 3) 
+  	expect(orders.list[:string]).to eq('3 Pizzas with pepperoni and cheese')
+  end
+  it 'saves a client' do
+    client.create('Carlos', 5555555, 'Nueva Frontera 9547')
+    client.create('Pepe', 8888888, 'Rio Bravo 1150')
+    expect(client.list(8888888)[:string]).to eq('Carlos, Phone: 5555555, Address: Nueva Frontera 9547');
+  end
+  it 'list orders' do
+    pending 'for entities associations'
+    client.create('Carlos', 5555555, 'Nueva Frontera 9547')
+    client.create('Pepe', 8888888, 'Rio Bravo 1150')
+    expect(client.list(8888888)).to eq('Pepe, Phone: 8888888, Address: Rio Bravo 1150');
   end
   context "open menu" do
   	pending 'research how spec text from output print or puts'  
