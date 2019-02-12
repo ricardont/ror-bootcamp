@@ -12,8 +12,18 @@ class Order
 	def create(phone )
   end
   @@yaml_file='./db/orders.yml'
+  @@client = Client.new
   def list()
-    return YAML.load_file(@@yaml_file)
+
+    yml = YAML.load_file(@@yaml_file)
+    new_orders=[]  
+    yml.map{ |row|
+      client = @@client.list(row[:phone]) 
+      new_order = @@client.except[:string].merge!row.exept[:phone]
+      new_order[:string] = "#{client[:string]} -- #{row[:string]}"  
+      new_orders << new_order
+    }
+    return new_orders
   end
 end
 class Pizza <  Order
