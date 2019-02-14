@@ -25,7 +25,7 @@ RSpec.describe PizzaBurger do
   it 'list orders ' do
     client.create('Pepe', 8888888, 'Rio Bravo 1150')
     pizza.create(8888888, 'pepperoni and cheese', 3) 
-    expect(orders.list()[:string]).to eq('Pepe, Phone: 8888888, Address: Rio Bravo 1150  -- 3 Pizzas with pepperoni and cheese');
+    expect(orders.list[0][:string]).to eq('3 Pizzas with pepperoni and cheese');
   end
   context "open menu" do
   	pending 'research how spec text from output print or puts'  

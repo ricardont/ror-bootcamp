@@ -12,18 +12,10 @@ class Order
 	def create(phone )
   end
   @@yaml_file='./db/orders.yml'
-  @@client = Client.new
   def list()
 
-    yml = YAML.load_file(@@yaml_file)
-    new_orders=[]  
-    yml.map{ |row|
-      client = @@client.list(row[:phone]) 
-      new_order = @@client.except[:string].merge!row.exept[:phone]
-      new_order[:string] = "#{client[:string]} -- #{row[:string]}"  
-      new_orders << new_order
-    }
-    return new_orders
+    return  YAML.load_file(@@yaml_file)
+    
   end
 end
 class Pizza <  Order
@@ -63,32 +55,28 @@ class Client
     end
   end
   def list(phone=nil)
-    yml = YAML.load_file(@@yaml_file)
-    if phone == nil
+    yml = File.read(@@yaml_file).empty? ? nil : YAML.load(File.read(@@yaml_file)) 
+    if phone == nil or yml == nil
       return yml
     else
-      yml.map.with_index { |row, index|
+
+      yml.map { |row|
         if row[:phone] == phone 
           return row
+          Break
+        else 
+          return nil
         end
+        return nil
       }
     end
   end
 end
 class PizzaBurger
-	attr_accessor :orders
-	def initialize(orders=[])
-  	@orders=orders
-  end
-
-  def order( item )
-    
-  	if not  item ==  nil 
-  		@orders.push(item)
-    else
-		'missing params'
-	  end
-	end
+  @@client = Client.new
+  @@pizza  = Pizza.new
+  @@burger = Burger.new
+  @@orders = Order.new
   def cancel(index)
   	 self.orders.delete_at(index)
   end
@@ -104,6 +92,8 @@ class PizzaBurger
   			menuListOrders()
   		when 4
   			menuCancelOrder()
+  		when 5
+  			menuListClients()
 			else
   		 	system "clear"
   		 	menuHeader()
@@ -127,51 +117,51 @@ class PizzaBurger
 		toppings=gets.chomp
 		print "How many Pizzas:"
 		quantity=gets.chomp
-		self.order(pizza.create(phone, toppings, quantity))
+		@@pizza.create(@@client_use[:phone], toppings, quantity)
 		self.menu(3)
   end
   def menuClientSearch
 		print "Phone?:"
-    result =  client.list(gets.chomp)
-    unless result  == nil
-      print "Welcome back {#result[:name]}"
+		phone = gets.chomp
+    @@client_use =  @@client.list(phone)
+    unless @@client_use  == nil
+      print "Welcome back #{@@client_use[:name]}"
     else
-      menuClientNew
+      menuClientNew(phone)
     end
   end
-  def menuClientNew
-    print "Phone:"
-    phone =gets.chomp
+  def menuClientNew(phone)
     print "Name:"
     name =gets.chomp
     print "Address:"
     address =gets.chomp
-    client.create(name, phone, address)
+    @@client.create(name, phone, address)
     system "clear"
-    print "Welcome {#name}"
+    print "Welcome #{name}"
   end
-  def menuClientList
+  def menuListClients
 		system "clear"
-    
+    @@client.list.map.with_index { |row, index|
+      i = index + 1;
+      print "#{i}: #{row[:string]} "  
+    }
   end
   def menuOrderBurger
 		system "clear"
 		menuHeader('burger')
-
 		print "How would you like your burger:"
 		type=gets.chomp
 		print "Would you like fries (y/n)"
-		
 		fries= gets.chomp == 'y' ? true : false 
-		self.order(Burger.new(name, phone, type, fries))
+		@@burger.new(@@client_use[:phone], type, fries)
 		self.menu(3)
   end
   def listOrders
-  	  self.orders.map.with_index { | order, i |
-  	  index = i + 1
-			puts "#{index}) #{order.string}"
-			puts "#{order.name}, #{order.phone} " 
-  	}
+    @@orders.list.map.with_index { |row, index|
+      client = @@client.list(row[:phone])
+      i = index + 1;
+      print "#{i}: #{client[:string]} -- #{row[:string]} "  
+    }
   end
   def menuListOrders
   	system 'clear'
@@ -194,7 +184,7 @@ class PizzaBurger
 
   def menuHeader(type='main')
   	puts '                                      0 : back or exit'
-  	if type == ''
+  	if type == 'main'
   	  puts 'Welcome'
   	else 
   	  menuClientSearch
@@ -215,6 +205,8 @@ class PizzaBurger
     	What would you like to do? """
     end
   end
+  
 end
+PizzaBurger.new().menu
 #puts Pizza.new('pepperoni and mushrooms', 5)
 
