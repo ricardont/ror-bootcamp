@@ -1,49 +1,53 @@
 require 'yaml'
-
-module FileManager
-    def write(file, data={})
-      unless  file == nil
-        File.open(file, "w+") {|f| f.write data.to_yaml}  
-      end
+require 'singleton'
+class FileManager
+  def write(file, data={})
+    unless  file == nil
+      File.open(file, "w+") {|f| f.write data.to_yaml}  
     end
-end
-class Order 
-  include FileManager
-	def create(phone )
   end
-  @@yaml_file='./db/orders.yml'
-  def list()
+  @@data 
+  def clear(file)
+    File.truncate(file, 0)
+  end
+end
 
-    return  YAML.load_file(@@yaml_file)
-    
-  end
-end
-class Pizza <  Order
-	def create(phone, toppings='pepperoni', quantity)
-		 super(phone)
+class Pizza 
+  include Singleton
+	def self.create(phone, toppings='pepperoni', quantity)
   	 plural = quantity.to_i > 1 ? 's' : '' 
-  	 string = "#{quantity} #{self.class.name}#{plural} with #{toppings}"  
-     row = {phone: phone, toppings: toppings, quantity:  quantity, string: string, type: self.class.name } 
-     data = File.read(@@yaml_file).empty? ? [] : YAML.load(File.read(@@yaml_file)) 
-     data.push(row)
-     write(@@yaml_file, data)
+  	 string = "#{quantity} Pizza#{plural} with #{toppings}"  
+    {phone: phone, toppings: toppings, quantity:  quantity, string: string, type: 'Pizza' } 
 	end
 end
 
-
-class Burger < Order
-	def create( phone, term, fries=false)
-		 super(phone)
+class Burger 
+  include Singleton
+	def self.create(phone, term, fries=false)
   	 with_fries = fries ? 'with' : 'without'
-  	 string = "#{self.class.name} #{with_fries} fries (#{term})"
-     row = {phone: phone, term: term, fries: fries, string: string, type: self.class.name }
-     data = File.read(@@yaml_file).empty? ? [] : YAML.load(File.read(@@yaml_file)) 
-     data.push(row)
-     write(@@yaml_file, data)
+  	 string = "Burger #{with_fries} fries (#{term})"
+     {phone: phone, term: term, fries: fries, string: string, type: 'Burger' }
 	end	
 end
-class Client 
-  include FileManager
+
+class Orders < FileManager
+  include Singleton
+
+  @@yaml_file='./db/orders.yml'
+  def self.create( item={} )
+    
+
+    write(@@yaml_file, @@data)
+  end
+  def list()
+    return  YAML.load_file(@@yaml_file)
+  end
+
+end
+
+
+class Client < FileManager
+  include Singleton
   @@yaml_file='./db/clients.yml'
   def create(name='Jhon Doe', phone, address)
     unless phone==nil or phone==0
@@ -72,7 +76,9 @@ class Client
     end
   end
 end
+
 class PizzaBurger
+=begin  
   @@client = Client.new
   @@pizza  = Pizza.new
   @@burger = Burger.new
@@ -205,8 +211,8 @@ class PizzaBurger
     	What would you like to do? """
     end
   end
-  
+=end  
 end
-PizzaBurger.new().menu
-#puts Pizza.new('pepperoni and mushrooms', 5)
+#PizzaBurger.new().menu
+
 
