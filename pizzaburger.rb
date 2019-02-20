@@ -1,14 +1,18 @@
 require 'yaml'
 require 'singleton'
 class FileManager
-  def write(file, data={})
+  include Singleton
+  def self.write(file, data={})
     unless  file == nil
       File.open(file, "w+") {|f| f.write data.to_yaml}  
     end
   end
-  @@data 
-  def clear(file)
+  def self.clear(file=@@yaml_file)
     File.truncate(file, 0)
+  end
+  private
+  def self.load_file(file_name)
+    File.read(file_name).empty? ? [] : YAML.load(File.read(file_name))
   end
 end
 
@@ -31,62 +35,46 @@ class Burger
 end
 
 class Orders < FileManager
-  include Singleton
 
   @@yaml_file='./db/orders.yml'
-  def self.create( item={} )
-    
-
-    write(@@yaml_file, @@data)
+  def self.submit( row={} )
+    data=load_file(@@yaml_file) 
+    data.push(row)
+    write(@@yaml_file, data)
   end
-  def list()
-    return  YAML.load_file(@@yaml_file)
+  def self.list()
+    YAML.load_file(@@yaml_file)
+  end
+  def self.delete(index)
+    data=load_file(@@yaml_file) 
+    data.delete_at(index)
+    write(@@yaml_file, data)
   end
 
 end
 
 
-class Client < FileManager
-  include Singleton
+class Clients < FileManager
   @@yaml_file='./db/clients.yml'
-  def create(name='Jhon Doe', phone, address)
-    unless phone==nil or phone==0
+  def self.create(name, phone, address)
       string = "#{name}, Phone: #{phone}, Address: #{address}"
       row = {name: name, phone: phone, address: address, string: string}
       data = File.read(@@yaml_file).empty? ? [] : YAML.load(File.read(@@yaml_file)) 
       data.push(row)
       write(@@yaml_file, data)
-    end
   end
-  def list(phone=nil)
-    yml = File.read(@@yaml_file).empty? ? nil : YAML.load(File.read(@@yaml_file)) 
-    if phone == nil or yml == nil
-      return yml
-    else
-
-      yml.map { |row|
-        if row[:phone] == phone 
-          return row
-          Break
-        else 
-          return nil
-        end
-        return nil
-      }
-    end
+  def self.list()
+    YAML.load_file(@@yaml_file)
+  end
+  def self.get(phone)
+    yml = File.read(@@yaml_file).empty? ? [] : YAML.load(File.read(@@yaml_file)) 
+    yml.detect { |row| row[:phone] == phone }
   end
 end
 
-class PizzaBurger
-=begin  
-  @@client = Client.new
-  @@pizza  = Pizza.new
-  @@burger = Burger.new
-  @@orders = Order.new
-  def cancel(index)
-  	 self.orders.delete_at(index)
-  end
-	def menu(opt=666)
+class PizzaBurger  
+  include Singleton
+	def self.menu(opt=666)
 		case opt
 			when 0
   			exit
@@ -116,83 +104,84 @@ class PizzaBurger
 		
 	end
 	private 
-	def menuOrderPizza
+	def self.menuOrderPizza
 		system "clear"
 		menuHeader('pizza')
 		print "Which toppings:"
 		toppings=gets.chomp
 		print "How many Pizzas:"
 		quantity=gets.chomp
-		@@pizza.create(@@client_use[:phone], toppings, quantity)
+		Orders.submit(Pizza.create(@@client_use[:phone], toppings, quantity))
 		self.menu(3)
   end
-  def menuClientSearch
+  def self.menuClientSearch
 		print "Phone?:"
 		phone = gets.chomp
-    @@client_use =  @@client.list(phone)
+    @@client_use =  Clients.get(phone)
     unless @@client_use  == nil
       print "Welcome back #{@@client_use[:name]}"
     else
       menuClientNew(phone)
     end
   end
-  def menuClientNew(phone)
+  def self.menuClientNew(phone)
     print "Name:"
-    name =gets.chomp
+    name = gets.chomp
     print "Address:"
-    address =gets.chomp
-    @@client.create(name, phone, address)
+    address = gets.chomp
+    Clients.create(name, phone, address)
     system "clear"
     print "Welcome #{name}"
+    @@client_use =  Clients.get(phone)
   end
-  def menuListClients
+  def self.menuListClients
 		system "clear"
-    @@client.list.map.with_index { |row, index|
+    Clients.list.map.with_index { |row, index|
       i = index + 1;
-      print "#{i}: #{row[:string]} "  
+      puts "#{i}: #{row[:string]} "  
     }
   end
-  def menuOrderBurger
+  def self.menuOrderBurger
 		system "clear"
 		menuHeader('burger')
 		print "How would you like your burger:"
 		type=gets.chomp
 		print "Would you like fries (y/n)"
 		fries= gets.chomp == 'y' ? true : false 
-		@@burger.new(@@client_use[:phone], type, fries)
+		Orders.submit(Burger.create(@@client_use[:phone], type, fries))
 		self.menu(3)
   end
-  def listOrders
-    @@orders.list.map.with_index { |row, index|
-      client = @@client.list(row[:phone])
+  def self.listOrders
+    Orders.list.map.with_index { |row, index|
+      client = Clients.get(row[:phone])
       i = index + 1;
-      print "#{i}: #{client[:string]} -- #{row[:string]} "  
+      puts "#{i}- #{client[:string]} : #{row[:string]} "  
     }
   end
-  def menuListOrders
+  def self.menuListOrders
   	system 'clear'
   	menuHeader('orders')
     listOrders
     gets.chomp
     self.menu()
   end
-  def menuCancelOrder
+  def self.menuCancelOrder
     system 'clear'
     menuHeader('cancel')
     listOrders
     item_to_cancel = gets.chomp.to_i - 1 
     print 'Are you sure? (y/n) :'
     if gets.chomp == 'y' or gets.chomp == 'yes' 
-    	self.cancel(item_to_cancel)
+    	Orders.delete(item_to_cancel)
     end
     self.menu(3)
   end
-
-  def menuHeader(type='main')
+  def self.menuHeader(type='main')
   	puts '                                      0 : back or exit'
   	if type == 'main'
   	  puts 'Welcome'
-  	else 
+  	end
+    if type == 'pizza' || type == 'burger'
   	  menuClientSearch
   	end
   	case type
@@ -210,9 +199,8 @@ class PizzaBurger
   		puts """Welcome to PizzaBurger,
     	What would you like to do? """
     end
-  end
-=end  
+  end  
 end
-#PizzaBurger.new().menu
+PizzaBurger.menu
 
 
