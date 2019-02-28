@@ -1,0 +1,21 @@
+---
+- :phone: 66666666666
+  :toppings: pepperoni and cheese
+  :quantity: 3
+  :string: 3 Pizzas with pepperoni and cheese
+  :type: Pizza
+- :phone: 88888888888
+  :term: rare
+  :fries: true
+  :string: Burger with fries (rare)
+  :type: Burger
+- :phone: 6142471026
+  :term: medium-rare
+  :fries: false
+  :string: Burger without fries (medium-rare)
+  :type: Burger
+- :phone: 222222222
+  :toppings: Ham and anchoas
+  :quantity: 2
+  :string: String new Pizza
+  :type: Pizza

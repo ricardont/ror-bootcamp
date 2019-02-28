@@ -1,23 +1,77 @@
 require 'yaml'
 require 'singleton'
-class FileManager
-  include Singleton
-  def self.write(file, data={})
-    unless  file == nil
-      File.open(file, "w+") {|f| f.write data.to_yaml}  
-    end
+
+class PizzaBurgerData
+  def init(file_name)
+    file_name = "./db/#{file_name}.yml"
+    if File.exist?(file_name)
+      File.read(file_name).empty? ? [] : YAML.load(File.read(file_name))
+    else 
+      []
+    end 
   end
-  def self.clear(file=@@yaml_file)
+  def save(file_name, row={})
+    unless  file_name == nil
+      data = self.init(file_name)
+      data.push(row)
+      file_name = "./db/#{file_name}.yml"
+      File.open(file_name, "w+") {|f| f.write data.to_yaml}  
+    end  
+  end
+
+  def clear(file)
     File.truncate(file, 0)
   end
-  private
-  def self.load_file(file_name)
-    File.read(file_name).empty? ? [] : YAML.load(File.read(file_name))
+  def method_missing(id, *args)
+    if  %i[orders clients].include? id
+      self.init(id.to_s)   
+    elsif id =~ /save_(.+)/ 
+      self.save(Regexp.last_match(1),  args[0])  
+    else
+      NoMethodError 
+    end
   end
+end
+class Controller
+  @@data=PizzaBurgerData.new
+  def create( row={} )
+    orders=data.orders 
+    orders.push(row)
+    data.save('orders', data)
+  end
+  def list()
+    YAML.load_file(@@yaml_file)
+  end
+  def delete(index)
+    data=load_file(@@yaml_file) 
+    data.delete_at(index)
+    write(@@yaml_file, data)
+  end
+end
+
+class PizzaOrder < Controller
+  include Singleton
+  #include Controller
+  def self.create(phone, toppings='pepperoni', quantity)
+     plural = quantity.to_i > 1 ? 's' : '' 
+     string = "#{quantity} Pizza#{plural} with #{toppings}"  
+    {phone: phone, toppings: toppings, quantity:  quantity, string: string, type: 'Pizza' } 
+  end
+end
+
+class BurgerOrder < Controller
+  include Singleton
+  #include Controller
+  def self.create(phone, term, fries=false)
+     with_fries = fries ? 'with' : 'without'
+     string = "Burger #{with_fries} fries (#{term})"
+     {phone: phone, term: term, fries: fries, string: string, type: 'Burger' }
+  end 
 end
 
 class Pizza 
   include Singleton
+
 	def self.create(phone, toppings='pepperoni', quantity)
   	 plural = quantity.to_i > 1 ? 's' : '' 
   	 string = "#{quantity} Pizza#{plural} with #{toppings}"  
@@ -34,6 +88,21 @@ class Burger
 	end	
 end
 
+class FileManager
+  include Singleton
+  def self.write(file, data={})
+    unless  file == nil
+      File.open(file, "w+") {|f| f.write data.to_yaml}  
+    end
+  end
+  def self.clear(file=@@yaml_file)
+    File.truncate(file, 0)
+  end
+  private
+  def self.load_file(file_name)
+    File.read(file_name).empty? ? [] : YAML.load(File.read(file_name))
+  end
+end
 class Orders < FileManager
 
   @@yaml_file='./db/orders.yml'
@@ -201,6 +270,6 @@ class PizzaBurger
     end
   end  
 end
-PizzaBurger.menu
+
 
 

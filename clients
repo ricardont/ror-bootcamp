@@ -1,0 +1,14 @@
+---
+- :name: Ricke Onti
+  :phone: 6142471026
+  :address: Rios papigochic 14
+  :string: 'Ricke Onti, Phone: 6142471026, Address: Rios papigochic 14'
+- :name: Pancho Lopez
+  :phone: 88888888888
+  :address: Calle siempre viva 15
+  :string: 'Pancho Lopez, Phone: 88888888888, Address: Calle siempre viva 15'
+- :phone: 33333333333
+  :term: rare
+  :fries: true
+  :string: String new Burger
+  :type: Burger

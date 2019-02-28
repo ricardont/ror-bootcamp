@@ -1,11 +1,35 @@
 require_relative '../pizzaburger.rb'
 require 'stringio'
 RSpec.describe PizzaBurger do 
+
+  before do 
+    Orders.submit(Pizza.create(66666666666, 'pepperoni and cheese', 3))
+    Orders.submit(Burger.create(88888888888, 'rare', true))
+    Orders.submit(Burger.create(6142471026, 'medium-rare', false))
+    Clients.create('Ricke Onti', 6142471026, 'Rios papigochic 14')
+    Clients.create('Pancho Lopez', 88888888888, 'Calle siempre viva 15')
+    #Clients.create('Bruce Wayne', 66666666666, 'Gotham City')
+  end
   after do
-   File.truncate('./db/orders.yml', 0)
+   File.truncate('./db/orders.yml', 0) 
    File.truncate('./db/clients.yml', 0)
-#    Orders.clear
-#    File.truncate(file, 0)
+  end
+  context 'For Yaml File' do 
+    data = PizzaBurgerData.new
+    it 'Get Orders' do
+      expect(data.orders.length).to eq(3)
+    end  
+    it 'Get Clients' do
+      expect(data.clients.length).to eq(2)
+    end
+    it 'Saves new Orders entrie' do
+      data.save_orders({phone: 222222222, toppings: 'Ham and anchoas', quantity:  2, string: 'String new Pizza', type: 'Pizza' })
+      expect(Orders.list[-1][:string]).to eq('String new Pizza') 
+    end
+    it 'Saves new Clients entrie' do
+      data.save_clients({phone: 33333333333, term: 'rare', fries: true, string: 'String new Burger', type: 'Burger' })
+      expect(Clients.list[-1][:string]).to eq('String new Burger')
+    end
   end
   it 'Creates a burger' do
   	expect(Burger.create(1111111111, 'medium-rare', false)[:string]).to eq('Burger without fries (medium-rare)')
@@ -15,24 +39,20 @@ RSpec.describe PizzaBurger do
   end
   context 'Submitting an order' do
     it 'of a pizza' do
-      Orders.submit(Pizza.create(66666666666, 'pepperoni and cheese', 3))
-      expect(Orders.list[-1][:string]).to eq('3 Pizzas with pepperoni and cheese')
+      expect(Orders.list[0][:string]).to eq('3 Pizzas with pepperoni and cheese')
     end
-    it 'of a burger' do
-      Orders.submit(Burger.create(1111111111, 'medium-rare', false))
+    it 'of a burger' do      
       expect(Orders.list[-1][:string]).to eq('Burger without fries (medium-rare)')
     end
 
   end
   it 'creates a client' do
-      Clients.create('Ricke Onti', 6142471026, 'Rios papigochic 14')
+      
       expect(Clients.get(6142471026)[:string]).to eq('Ricke Onti, Phone: 6142471026, Address: Rios papigochic 14')
       #puts Clients.get(6142471026)
   end
   it 'deletes an order' do 
-    Orders.submit(Burger.create(1111111111, 'medium-rare', false))
-    Orders.submit(Burger.create(1111111111, 'medium-rare', false))
-    Orders.submit(Pizza.create(66666666666, 'pepperoni and cheese', 3))
+
     expect(Orders.list.length).to eq(3)
     Orders.delete(1)
     expect(Orders.list.length).to eq(2)
